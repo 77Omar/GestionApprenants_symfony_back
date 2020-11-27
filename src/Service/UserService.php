@@ -39,18 +39,19 @@ class UserService
 
        $avatar=$request->files->get("avatar");
        $avatar=fopen($avatar->getRealPath(),"rb");
-        $profils=$this->profilRepository->find($user['profils']);
 
-       $profil=ucfirst($profils->getLibelle());
+        $profils=$this->profilRepository->find($user['profils']);
+        $profil=ucfirst($profils->getLibelle());
         //$class="App\Entity\\$profil";
 
        $users=$this->serializer->denormalize($user,"App\Entity\\$profil",true);
-        //dd($users);
 
+        $users->setProfil($profils);
+        //dd($users);
         $password=$users->getPassword();
         $users->setPassword($this->encoder ->encodePassword($users,$password));
         $users->setAvatar($avatar);
-        $users->setProfil($profils);
+
 
         $this->manager->persist($users);
         $this->manager->flush();
