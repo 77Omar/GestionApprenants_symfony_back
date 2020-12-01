@@ -2,6 +2,7 @@
 
 namespace App\Controller;
 
+use App\Entity\User;
 use App\Service\UserService;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
@@ -21,6 +22,14 @@ class UserController extends AbstractController
     public function addUsers(Request $request){
         $this->userService->addUser($request);
         return new JsonResponse("l'Utilisateur a été ajouté avec succés",Response::HTTP_CREATED);
+    }
+
+    /**
+     * @Route("api/admin/users/{id}", name="put_user",methods={"PUT"})
+     */
+       public function ModifyUser(Request $request,int $id){
+        $this->userService->updateUser($request, $id);
+        return new JsonResponse("l'Utilisateur a été modifié avec succés",Response::HTTP_CREATED);
     }
 
 }

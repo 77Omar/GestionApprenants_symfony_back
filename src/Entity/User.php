@@ -8,13 +8,14 @@ use ApiPlatform\Core\Annotation\ApiResource;
 use App\Repository\UserRepository;
 use Doctrine\ORM\Mapping as ORM;
 use Symfony\Component\Security\Core\User\UserInterface;
+use Symfony\Component\Validator\Constraints as Assert;
 
 /**
  *@ORM\Entity(repositoryClass="App\Repository\UserRepository")
  *@ORM\InheritanceType("JOINED")
  *@ORM\DiscriminatorColumn(name="type",  type="string")
  *@ORM\DiscriminatorMap({"admin" ="User", "apprenant" = "Apprenant", "formteur" = "Formateur", "cm" ="Cm"})
- * * @ApiResource(
+ *  @ApiResource(
  *     routePrefix="/admin",
  *     attributes={
  * "security"="is_granted('ROLE_admin')",
@@ -23,6 +24,7 @@ use Symfony\Component\Security\Core\User\UserInterface;
  *     collectionOperations={
  *     "get"={"path"="/users"},
  *      "post"={"path"="/users"},
+ *
  *     },
  *      itemOperations={
  *     "get"={"path"="/users/{id}"},
@@ -42,6 +44,7 @@ class User implements UserInterface
 
     /**
      * @ORM\Column(type="string", length=180, unique=true)
+     * @Assert\NotBlank(message="Le email est obligatoire")
      */
     protected $email;
 
@@ -53,21 +56,25 @@ class User implements UserInterface
     /**
      * @var string The hashed password
      * @ORM\Column(type="string")
+     * @Assert\NotBlank(message="Le password est obligatoire")
      */
     protected $password;
 
     /**
      * @ORM\Column(type="string", length=255)
+     * @Assert\NotBlank(message="Le firstName est obligatoire")
      */
     protected $firstName;
 
     /**
      * @ORM\Column(type="string", length=255)
+     * @Assert\NotBlank(message="Le lastName est obligatoire")
      */
     protected $lastName;
 
     /**
      * @ORM\ManyToOne(targetEntity=Profil::class, inversedBy="users")
+     * @Assert\NotBlank(message="Le Profil est obligatoire")
      */
     protected $profil;
 

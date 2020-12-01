@@ -4,6 +4,7 @@ namespace App\Service;
 
 use App\Entity\User;
 use App\Repository\ProfilRepository;
+use App\Repository\UserRepository;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
@@ -20,25 +21,25 @@ class UserService
     private $validator;
     private $encoder;
     private $profilRepository;
+    private $userRepository;
 
-    public function __construct(EntityManagerInterface $manager, SerializerInterface $serializer, ProfilRepository $profilRepository, UserPasswordEncoderInterface $encoder, ValidatorInterface $validator)
+    public function __construct(EntityManagerInterface $manager, SerializerInterface $serializer,UserRepository $userRepository, ProfilRepository $profilRepository, UserPasswordEncoderInterface $encoder, ValidatorInterface $validator)
     {
         $this->manager = $manager;
         $this->serializer = $serializer;
         $this->validator = $validator;
         $this->encoder = $encoder;
         $this->profilRepository = $profilRepository;
+        $this->userRepository = $userRepository;
 
     }
 
+    //Ajouter un utilisateur
     public function addUser(Request $request)
     {
         $user=$request->request->all();
-
-
-
-       $avatar=$request->files->get("avatar");
-       $avatar=fopen($avatar->getRealPath(),"rb");
+        $avatar=$request->files->get("avatar");
+        $avatar=fopen($avatar->getRealPath(),"rb");
 
         $profils=$this->profilRepository->find($user['profils']);
         $profil=ucfirst($profils->getLibelle());
@@ -63,4 +64,31 @@ class UserService
 
     }
 
+
+    public function updateUser(Request $request, int $id){
+        $dataUser= $request->request->all();
+        //dd($dataUser);
+        $avatar= $request->files->get("avatar");
+        //dd($avatar);
+        if ($avatar){
+            $avatar= fopen($avatar->getRealPath(),'rb');
+        }
+
+        $typeUser=$this->userRepository->find($id);
+
+        foreach ($dataUser as $key=>$value){
+            if ($key !== "_method"){
+                $key=ucfirst($key);
+                $set= "set".$key;
+                //dd($set);
+                $typeUser->$set($value);
+            }
+        }
+        $this->manager->persist($typeUser);
+        $this->manager->flush();
+        if ($avatar){
+            fclose($avatar);
+        }
+        return new JsonResponse("l'Utilisateur a été modifié avec succés",Response::HTTP_CREATED);
+    }
 }
