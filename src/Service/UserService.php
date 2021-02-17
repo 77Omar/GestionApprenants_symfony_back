@@ -1,5 +1,5 @@
 <?php
-// src/Service/UserService.php
+
 namespace App\Service;
 
 use App\Entity\User;
@@ -37,30 +37,32 @@ class UserService
     //Ajouter un utilisateur
     public function addUser(Request $request)
     {
+        //dd($request->getContent());
         $user=$request->request->all();
         $avatar=$request->files->get("avatar");
-        $avatar=fopen($avatar->getRealPath(),"rb");
+        //$avatar=fopen($avatar->getRealPath(),"rb");
+
+       if ($avatar != null) {
+            $avatar = fopen($avatar->getRealPath(), 'rb');
+        }
 
         $profils=$this->profilRepository->find($user['profils']);
         $profil=ucfirst($profils->getLibelle());
-        //$class="App\Entity\\$profil";
+        $class="App\Entity\\$profil";
 
-       $users=$this->serializer->denormalize($user,"App\Entity\\$profil",true);
-
+        $users=$this->serializer->denormalize($user,"$class",true);
         $users->setProfil($profils);
         //dd($users);
         $password=$users->getPassword();
         $users->setPassword($this->encoder ->encodePassword($users,$password));
         $users->setAvatar($avatar);
 
-
         $this->manager->persist($users);
         $this->manager->flush();
 
         fclose($avatar);
 
-        //return $this->json("vous avez ajouter un user success",Response::HTTP_CREATED);
-        return new JsonResponse("l'Utilisateur a été ajouté avec succés",Response::HTTP_CREATED);
+        return $users;
 
     }
 
@@ -69,19 +71,21 @@ class UserService
         $dataUser= $request->request->all();
         //dd($dataUser);
         $avatar= $request->files->get("avatar");
-        //dd($avatar);
         if ($avatar){
             $avatar= fopen($avatar->getRealPath(),'rb');
         }
 
         $typeUser=$this->userRepository->find($id);
+        //dd($typeUser);
 
         foreach ($dataUser as $key=>$value){
+            //dd($value);
             if ($key !== "_method"){
                 $key=ucfirst($key);
                 $set= "set".$key;
                 //dd($set);
                 $typeUser->$set($value);
+                //dd($typeUser);
             }
         }
         $this->manager->persist($typeUser);

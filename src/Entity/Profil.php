@@ -3,17 +3,23 @@
 namespace App\Entity;
 
 use ApiPlatform\Core\Annotation\ApiFilter;
+use ApiPlatform\Core\Annotation\ApiSubresource;
 use ApiPlatform\Core\Bridge\Doctrine\Orm\Filter\BooleanFilter;
 use ApiPlatform\Core\Annotation\ApiResource;
 use App\Repository\ProfilRepository;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
 use Doctrine\ORM\Mapping as ORM;
+use Symfony\Bridge\Doctrine\Validator\Constraints\UniqueEntity;
 use Symfony\Component\Serializer\Annotation\Groups;
 
 
 /**
  * @ORM\Entity(repositoryClass=ProfilRepository::class)
+ * @UniqueEntity(
+ * fields={"libelle"},
+ * message="Le libelle existe déjà."
+ * )
  * @ApiResource(
  *
  *     routePrefix="/admin",
@@ -25,10 +31,6 @@ use Symfony\Component\Serializer\Annotation\Groups;
  *     collectionOperations={
  *     "get"={"path"="/profils"},
  *      "post"={"path"="/profils"},
- *      "get_users_profil"={
- *              "method"="GET",
- *              "path"="/profils/{id}/users",
- *          },
  *     },
  *      itemOperations={
  *     "get"={"path"="/profils/{id}"},
@@ -52,11 +54,13 @@ class Profil
     /**
      * @ORM\Column(type="string", length=255)
      * @Groups({"profil:read"})
+     * @Groups ({"user:read","u:write", "userP:read"})
      */
     private $libelle;
 
     /**
      * @ORM\OneToMany(targetEntity=User::class, mappedBy="profil")
+     * @ApiSubresource()
      */
     private $users;
 

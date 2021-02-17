@@ -17,30 +17,31 @@ class Niveau
      * @ORM\Id()
      * @ORM\GeneratedValue()
      * @ORM\Column(type="integer")
-     * @Groups({"competence:read"})
+     * @Groups ({"competence:read", "competences:write", "groupComp:read"})
      */
     private $id;
 
     /**
      * @ORM\Column(type="string", length=255)
-     * @Groups({"competence:read"})
+     * @Groups({"competence:read", "competences:write"})
      */
     private $libelle;
 
     /**
      * @ORM\Column(type="string", length=255)
-     * @Groups({"competence:read"})
+     * @Groups({"competence:read", "competences:write"})
      */
     private $critereEvaluation;
 
     /**
      * @ORM\Column(type="string", length=255)
-     * @Groups({"competence:read"})
+     * @Groups({"competence:read", "competences:write"})
      */
     private $groupeAction;
 
     /**
      * @ORM\ManyToOne(targetEntity=Competences::class, inversedBy="niveaux" ,cascade={"persist"})
+     * @Groups({"brief:read","brief_Groupe:read"})
      */
     private $competence;
 
@@ -94,6 +95,7 @@ class Niveau
         return $this;
     }
 
+
     public function getCompetence(): ?Competences
     {
         return $this->competence;
@@ -105,6 +107,4 @@ class Niveau
 
         return $this;
     }
-
-
 }

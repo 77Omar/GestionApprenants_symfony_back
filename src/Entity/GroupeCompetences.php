@@ -3,13 +3,13 @@
 namespace App\Entity;
 
 use ApiPlatform\Core\Annotation\ApiResource;
+use ApiPlatform\Core\Annotation\ApiSubresource;
 use App\Repository\GroupeCompetencesRepository;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
 use Doctrine\ORM\Mapping as ORM;
 use Symfony\Bridge\Doctrine\Validator\Constraints\UniqueEntity;
 use Symfony\Component\Serializer\Annotation\Groups;
-use Symfony\Component\Validator\Constraints as Assert;
 
 /**
  * @ORM\Entity(repositoryClass=GroupeCompetencesRepository::class)
@@ -19,6 +19,7 @@ use Symfony\Component\Validator\Constraints as Assert;
  * )
  *  @ApiResource(
  *   normalizationContext={"groups"={"groupComp:read"}},
+ *     denormalizationContext={"groups"={"groupecomp:write"}},
  *     routePrefix="/admin",
  *     attributes={
  * "security"="is_granted('ROLE_admin')  or is_granted('ROLE_formateur') or is_granted('ROLE_cm')",
@@ -27,10 +28,6 @@ use Symfony\Component\Validator\Constraints as Assert;
  *   collectionOperations={
  *     "get"={"path"="/groupeCompetence"},
  *     "post"={"path"="/groupeCompetence"},
- *     "get_groupComp"={
- *              "method"="GET",
- *              "path"="/groupeCompetence/{id}/competences"
- *          },
  *    "get_groupCompetence"={
  *              "method"="GET",
  *              "path"="/groupeCompetence/competences","normalization_context"={"groups":"compGroucomp:read"}
@@ -45,36 +42,49 @@ use Symfony\Component\Validator\Constraints as Assert;
 class GroupeCompetences
 {
     /**
+     *
      * @ORM\Id()
      * @ORM\GeneratedValue()
      * @ORM\Column(type="integer")
-     * @Groups({"compGroucomp:read", "compGroucomp:read"})
+     * @Groups({"compGroucomp:read", "competence:read", "competences:write", "compGroucomp:read", "referentiel:read", "refcomp:read","refgroupcomp:read", "groupcompetence:write","groupComp:read"})
+     *
      */
     private $id;
 
     /**
      * @ORM\Column(type="string", length=255)
-     * @Groups({"compGroucomp:read", "compGroucomp:read"})
+     * @Groups({"compGroucomp:read", "compGroucomp:read", "groupecomp:write", "referentiel:read", "refcomp:read","refgroupcomp:read", "groupcompetence:write"})
+     * @Groups ({"competence:read","groupComp:read"})
      */
+
     private $libelle;
 
     /**
      * @ORM\Column(type="string", length=255)
-     * @Assert\NotBlank(message="Le descriptif est obligatoire")
-     * @Groups({"compGroucomp:read", "compGroucomp:read"})
+     * @Groups({"compGroucomp:read", "compGroucomp:read", "groupecomp:write", "referentiel:read", "refcomp:read", "refgroupcomp:read", "groupcompetence:write"})
+     * @Groups ({"competence:read", "competences:write", "groupComp:read"})
      */
     private $descriptif;
 
     /**
      * @ORM\ManyToMany(targetEntity=Competences::class, inversedBy="groupeCompetences",cascade={"persist"})
-     * @Groups({"groupComp:read", "compGroucomp:read"})
+     * @Groups({"groupComp:read", "compGroucomp:read", "groupecomp:write", "refcomp:read", "comGroup:read"})
+     * @ApiSubresource()
      */
     private $competences;
 
+
     /**
-     * @ORM\ManyToMany(targetEntity=Referentiel::class, inversedBy="groupeCompetences",cascade={"persist"})
+     * @ORM\Column(type="boolean")
+     * @Groups({"groupcompetence:write"})
+     *
      */
-    private $referentiel;
+    private $isDeleted = false;
+
+    /**
+     * @ORM\ManyToMany(targetEntity=Referentiel::class, mappedBy="groupeCompetences")
+     */
+    private $referentiels;
 
 
 
@@ -83,7 +93,7 @@ class GroupeCompetences
         $this->creerCompetence = new ArrayCollection();
         $this->affecter = new ArrayCollection();
         $this->competences = new ArrayCollection();
-        $this->referentiel = new ArrayCollection();
+        $this->referentiels = new ArrayCollection();
     }
 
     public function getId(): ?int
@@ -141,18 +151,31 @@ class GroupeCompetences
         return $this;
     }
 
+    public function getIsDeleted(): ?bool
+    {
+        return $this->isDeleted;
+    }
+
+    public function setIsDeleted(?bool $isDeleted): self
+    {
+        $this->isDeleted = $isDeleted;
+
+        return $this;
+    }
+
     /**
      * @return Collection|Referentiel[]
      */
-    public function getReferentiel(): Collection
+    public function getReferentiels(): Collection
     {
-        return $this->referentiel;
+        return $this->referentiels;
     }
 
     public function addReferentiel(Referentiel $referentiel): self
     {
-        if (!$this->$referentiel->contains($referentiel)) {
-            $this->$referentiel[] = $referentiel;
+        if (!$this->referentiels->contains($referentiel)) {
+            $this->referentiels[] = $referentiel;
+            $referentiel->addGroupeCompetence($this);
         }
 
         return $this;
@@ -160,8 +183,8 @@ class GroupeCompetences
 
     public function removeReferentiel(Referentiel $referentiel): self
     {
-        if ($this->referentiel->contains($referentiel)) {
-            $this->referentiel->removeElement($referentiel);
+        if ($this->referentiels->removeElement($referentiel)) {
+            $referentiel->removeGroupeCompetence($this);
         }
 
         return $this;

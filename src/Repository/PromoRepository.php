@@ -2,26 +2,34 @@
 
 namespace App\Repository;
 
-use App\Entity\Profil;
+use App\Entity\Promo;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
 use Doctrine\Persistence\ManagerRegistry;
 
 /**
- * @method Profil|null find($id, $lockMode = null, $lockVersion = null)
- * @method Profil|null findOneBy(array $criteria, array $orderBy = null)
- * @method Profil[]    findAll()
- * @method Profil[]    findBy(array $criteria, array $orderBy = null, $limit = null, $offset = null)
+ * @method Promo|null find($id, $lockMode = null, $lockVersion = null)
+ * @method Promo|null findOneBy(array $criteria, array $orderBy = null)
+ * @method Promo[]    findAll()
+ * @method Promo[]    findBy(array $criteria, array $orderBy = null, $limit = null, $offset = null)
  */
-class ProfilRepository extends ServiceEntityRepository
+class PromoRepository extends ServiceEntityRepository
 {
     public function __construct(ManagerRegistry $registry)
     {
-        parent::__construct($registry, Profil::class);
+        parent::__construct($registry, Promo::class);
+    }
+    public function findByPromo()
+    {
+        return $this->createQueryBuilder('p')
+            ->innerJoin('p.referentiel','r')
+            ->orderBy('p.id', 'ASC')
+            ->getQuery()
+            ->getResult()
+            ;
     }
 
-
     // /**
-    //  * @return Profil[] Returns an array of Profil objects
+    //  * @return Promo[] Returns an array of Promo objects
     //  */
     /*
     public function findByExampleField($value)
@@ -38,7 +46,7 @@ class ProfilRepository extends ServiceEntityRepository
     */
 
     /*
-    public function findOneBySomeField($value): ?Profil
+    public function findOneBySomeField($value): ?Promo
     {
         return $this->createQueryBuilder('p')
             ->andWhere('p.exampleField = :val')

@@ -30,27 +30,24 @@ class GroupeCompetencesController extends AbstractController
     {
           $groupeCompJson=$request->getContent();
           $groupeCompTab=$this->serializer->decode($groupeCompJson, "json");
-          //dd($groupeCompTab);
           $groupeCompObjet=$groupeCompetencesRepository->find($id);
-          //dd($groupeCompObjet);
           if(isset($groupeCompTab['competences'])){
              foreach ($groupeCompTab['competences'] as $competence){
                  if(isset($competence['libelle'])){
                      $requestCompetence=$competencesRepository->findBy(["libelle"=>$competence['libelle']]);
-                     //dd($requestCompetence);
                      if(!$requestCompetence){
                        $newCompetence= new Competences();
                        $newCompetence->setLibelle($competence['libelle']);
                        $this->manager->persist($newCompetence);
                        $groupeCompObjet->addCompetence($newCompetence);
-                       //dd($newCompetence);
+                       // dd($groupeCompObjet);
                      }else{
                        $groupeCompObjet->addCompetence($requestCompetence[0]);
-                       //dd($groupeCompObjet);
                      }
                  }
                  if(isset($competence['id'])){
                      $requestCompetenceId=$competencesRepository->find($competence['id']);
+                     //dd($requestCompetenceId);
                      $groupeCompObjet->removeCompetence($requestCompetenceId);
                      $this->manager->persist($groupeCompObjet);
                      //dd($groupeCompObjet);
@@ -62,4 +59,56 @@ class GroupeCompetencesController extends AbstractController
         return $this->json($groupeCompObjet,Response::HTTP_CREATED);
 
     }
+
+    /**
+     * @Route("api/admin/groupeCompetence", name="add_groupcomp",methods={"POST"})
+     */
+    public function addGroupCompetence(CompetencesRepository $competencesRepository, Request $request){
+        $groupeComp= $request->getContent();
+        $groupeCompTab = $this->serializer->decode($groupeComp,"json");
+        //dd($groupeCompTab);
+        if(isset($groupeCompTab['competences'])){
+            $Competences=$groupeCompTab['competences'];
+        }
+        $groupeCompTab['competences'] = [];
+        $groupeCompObjet = $this->serializer->denormalize($groupeCompTab, "App\Entity\GroupeCompetences");
+        //dd($groupeCompObjet);
+        if(count($Competences)){
+            foreach ($Competences as $competence){
+                if(isset($competence['id'])){
+                    $competencefind=$competencesRepository->findOneBy(["id"=>$competence['id']]);
+                   //dd($competencefind);
+                    if (!$competencefind) {
+                        $newCompetence= new Competences();
+                        $newCompetence->setLibelle($competence['libelle']);
+                        $this->manager->persist($newCompetence);
+                        $groupeCompObjet->addCompetence($newCompetence);
+                        //dd($groupeCompObjet);
+                    }
+                    $groupeCompObjet->addCompetence($competencefind);
+                   //dd($groupeCompObjet);
+                }
+                else{
+                    $newCompetence=$this->serializer->denormalize($competence, "App\Entity\Competences");
+                    //dd($newComp);
+                    $error = $this->validator->validate($newCompetence);
+                    if(count($error))
+                    {
+                        return $this->json($error,Response::HTTP_BAD_REQUEST);
+                    }
+                    $this->manager->persist($newCompetence);
+                    $groupeCompObjet->addCompetence($newCompetence);
+                    //dd($groupeTagObjet);
+                }
+            }
+
+        }
+        else {
+            return $this->json(["message" => "Le competence est obligatoire."],Response::HTTP_NOT_FOUND);
+        }
+        $this->manager->persist($groupeCompObjet);
+        $this->manager->flush();
+        return $this->json($groupeCompObjet,Response::HTTP_CREATED);
+    }
+
 }

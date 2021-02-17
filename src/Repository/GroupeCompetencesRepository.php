@@ -19,6 +19,15 @@ class GroupeCompetencesRepository extends ServiceEntityRepository
         parent::__construct($registry, GroupeCompetences::class);
     }
 
+    public function findBygrpCompetence()
+    {
+        return $this->createQueryBuilder('g')
+            ->innerJoin('g.competences', 'p')
+            ->orderBy('g.id', 'ASC')
+            ->getQuery()
+            ->getResult()
+            ;
+    }
     // /**
     //  * @return GroupeCompetences[] Returns an array of GroupeCompetences objects
     //  */

@@ -13,11 +13,9 @@ use Symfony\Component\Validator\Constraints as Assert;
 
 /**
  * @ORM\Entity(repositoryClass=CompetencesRepository::class)
- * @UniqueEntity(
- * fields={"libelle"},
- * message="Le libelle existe déjà."
- * )
+
  * @ApiResource(
+ * denormalizationContext={"groups"={"competences:write"}},
  *    routePrefix="/admin",
  *     attributes={
  * "security"="is_granted('ROLE_admin')  or is_granted('ROLE_formateur') or is_granted('ROLE_cm')",
@@ -28,7 +26,7 @@ use Symfony\Component\Validator\Constraints as Assert;
  *      "post"={"path"="/competences"},
  *     },
  *     itemOperations={
- *     "get"={"path"="/competences/{id}"},
+ *     "get"={"path"="/competences/{id}", "normalization_context"={"groups":"competence:read"}},
  *       "put"={"path"="/competences/{id}"},
  *     }
  * )
@@ -41,37 +39,48 @@ class Competences
      * @ORM\Id()
      * @ORM\GeneratedValue()
      * @ORM\Column(type="integer")
-     * @Groups({"competence:read","groupComp:read", "compGroucomp:read"})
+     * @Groups({"compGroucomp:read","groupecomp:write", "refcomp:read", "comGroup:read"})
+     * @Groups({"competences:write", "competence:read", "groupecomp:write"})
      */
     private $id;
 
     /**
-     * @ORM\Column(type="string", length=255, unique=true)
-     * @Groups({"competence:read", "groupComp:read", "compGroucomp:read"})
+     * @ORM\Column(type="string", length=255 )
+     * @Groups({"groupComp:read", "compGroucomp:read","groupecomp:write", "refcomp:read", "competences:write", "comGroup:read"})
+     * @Groups({"competences:write", "competence:read", "groupecomp:write"})
      */
     private $libelle;
 
     /**
      * @ORM\ManyToMany(targetEntity=GroupeCompetences::class, mappedBy="competences",cascade={"persist"})
+     * @Groups({"competence:read", "competences:write"})
      */
     private $groupeCompetences;
 
-    /**
-     * @ORM\OneToMany(targetEntity=Niveau::class, mappedBy="competence",cascade={"persist"})
-     * @Groups({"competence:read"})
-     */
-    private $niveaux;
 
     /**
      * @ORM\OneToMany(targetEntity=CompetencesValides::class, mappedBy="competences",cascade={"persist"})
      */
     private $competencesValides;
 
+    /**
+     * @ORM\Column(type="boolean")
+     */
+    private $archived = false;
+
+    /**
+     * @ORM\OneToMany(targetEntity=Niveau::class, mappedBy="competence",cascade={"persist"})
+     * @Groups({"groupecompetence:read_All"})
+     * @Groups({"competence:read", "competences:write"})
+     */
+    private $niveaux;
+
+
     public function __construct()
     {
         $this->groupeCompetences = new ArrayCollection();
-        $this->niveaux = new ArrayCollection();
         $this->competencesValides = new ArrayCollection();
+        $this->niveaux = new ArrayCollection();
     }
 
     public function getId(): ?int
@@ -119,36 +128,6 @@ class Competences
         return $this;
     }
 
-    /**
-     * @return Collection|Niveau[]
-     */
-    public function getNiveaux(): Collection
-    {
-        return $this->niveaux;
-    }
-
-    public function addNiveau(Niveau $niveau): self
-    {
-        if (!$this->niveaux->contains($niveau)) {
-            $this->niveaux[] = $niveau;
-            $niveau->setCompetence($this);
-        }
-
-        return $this;
-    }
-
-    public function removeNiveau(Niveau $niveau): self
-    {
-        if ($this->niveaux->contains($niveau)) {
-            $this->niveaux->removeElement($niveau);
-            // set the owning side to null (unless already changed)
-            if ($niveau->getCompetence() === $this) {
-                $niveau->setCompetence(null);
-            }
-        }
-
-        return $this;
-    }
 
     /**
      * @return Collection|CompetencesValides[]
@@ -181,4 +160,47 @@ class Competences
         return $this;
     }
 
+    public function getArchived(): ?bool
+    {
+        return $this->archived;
+    }
+
+    public function setArchived(bool $archived): self
+    {
+        $this->archived = $archived;
+
+        return $this;
+    }
+
+    /**
+     * @return Collection|Niveau[]
+     */
+    public function getNiveaux(): Collection
+    {
+        //$this->niveaux = new ArrayCollection();
+        return $this->niveaux;
+    }
+
+    public function addNiveau(Niveau $niveau): self
+    {
+        if (!$this->niveaux->contains($niveau)) {
+            $this->niveaux[] = $niveau;
+            $niveau->setCompetence($this);
+        }
+
+        return $this;
+    }
+
+    public function removeNiveau(Niveau $niveau): self
+    {
+        if ($this->niveaux->contains($niveau)) {
+            $this->niveaux->removeElement($niveau);
+            // set the owning side to null (unless already changed)
+            if ($niveau->getCompetence() === $this) {
+                $niveau->setCompetence(null);
+            }
+        }
+
+        return $this;
+    }
 }

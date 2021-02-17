@@ -20,8 +20,8 @@ class UserController extends AbstractController
      * @Route("api/admin/users", name="add_user",methods={"POST"})
      */
     public function addUsers(Request $request){
-        $this->userService->addUser($request);
-        return new JsonResponse("l'Utilisateur a été ajouté avec succés",Response::HTTP_CREATED);
+        $data = $this->userService->addUser($request);
+        return new JsonResponse($data,Response::HTTP_CREATED);
     }
 
     /**
@@ -31,5 +31,4 @@ class UserController extends AbstractController
         $this->userService->updateUser($request, $id);
         return new JsonResponse("l'Utilisateur a été modifié avec succés",Response::HTTP_CREATED);
     }
-
 }

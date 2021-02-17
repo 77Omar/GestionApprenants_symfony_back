@@ -64,7 +64,6 @@ class GroupeTagController extends AbstractController
                     //dd($groupeTagObjet);
                 }
             }
-
         }
         else {
             return $this->json(["message" => "Le tag est obligatoire."],Response::HTTP_NOT_FOUND);
@@ -125,7 +124,6 @@ class GroupeTagController extends AbstractController
                     );
                     //dd($requestTagId);
                     $groupeObj->removeTag($requestTagId);
-                    //dd($groupeObj);
                     $this->manager->persist($groupeObj);
                 }
             }
